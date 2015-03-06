@@ -28,8 +28,8 @@ class Paginator
     public $href = '?p=';
     public $position = 1;
     public $buttons = [];
-    public $class = ['a' => '', 'li' => '.navigator'];
-    public $structure = "<li class=\":class-li\"><a class=\":class-a\" href=\":href\">:number</a></li>";
+    public $class = ['a' => '', 'li' => 'navigator'];
+    public $html = "<li class=\":class-li\"><a class=\":class-a\" href=\":href\">:number</a></li>";
 
     function __construct($position = false)
     {
@@ -59,6 +59,11 @@ class Paginator
                 'number' => $i,
             ];
 
+            if($i == $this->position){
+                $attr['class-li'] = $this->class['li'].' current';
+                $attr['class-a'] = $this->class['a'].' current';
+            }
+
             $this->buttons[] = $this->createLi($attr);
         }
 
@@ -68,12 +73,12 @@ class Paginator
 
     function createLi($value)
     {
-        $structure = $this->structure;
-        $structure = str_replace(":href", $value['href'], $structure);
-        $structure = str_replace(":number", $value['number'], $structure);
-        $structure = str_replace(":class-a", $this->class['a'], $structure);
-        $structure = str_replace(":class-li", $this->class['li'], $structure);
-        return $structure;
+        $html = $this->html;
+        $html = str_replace(":href", $value['href'], $html);
+        $html = str_replace(":number", $value['number'], $html);
+        $html = str_replace(":class-a", isset($value['class-a']) ? $value['class-a'] : $this->class['a'], $html);
+        $html = str_replace(":class-li", isset($value['class-li']) ? $value['class-li'] : $this->class['li'], $html);
+        return $html;
     }
 
     function navigator()
@@ -87,7 +92,7 @@ class Paginator
         echo $this->navigator();
     }
 
-    function ul($class = '.paginator')
+    function ul($class = 'paginator')
     {
         $buttons = $this->navigator();
         echo "<ul class=\"$class\">$buttons</ul>";
