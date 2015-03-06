@@ -14,22 +14,17 @@ class Paginator
     public $total = null;
     public $query = 'p';
     public $quantPages = null;
-    public $arrows = 'firstAndLast';
-    public $arrowsContent = [
-        'previewAndNext' => [
-            'preview' => '<<',
-            'next' => '>>',
-        ],
-        'firstAndLast' => [
-            'first' => '1...',
-            'last' => '...:number'
-        ]
+    public $content = '';
+    public $arrows = [
+        "<li class=\":class-li\"><a class=\":class-a\" href=\":href:last\">last</a></li>",
+        "<li class=\":class-li\"><a class=\":class-a\" href=\":href:next\">next</a></li>"
     ];
+
     public $href = '?p=';
     public $position = 1;
     public $buttons = [];
-    public $class = ['a' => '', 'li' => 'navigator'];
-    public $html = "<li class=\":class-li\"><a class=\":class-a\" href=\":href\">:number</a></li>";
+    public $class = ['a' => '', 'li' => 'navigator', 'current' => ''];
+    public $html = "<li class=\":class-li :class-current\"><a class=\":class-a\" href=\":href:number\">:number</a></li>";
 
     function __construct($position = false)
     {
@@ -48,36 +43,35 @@ class Paginator
 
         $this->total = $total;
 
-        $this->quantPages = ceil($this->total / $this->max);
+        $this->end = $this->quantPages = ceil($this->total / $this->max);
+        $this->first = 1;
+        $this->last = $this->position - 1;
+        $this->next = 20;
+        $this->number = $this->position;
+
     }
 
     function execute()
     {
         for ($i = $this->position; $i <= ($this->position + $this->max); $i++) {
-            $attr = [
-                'href' => $this->href . $i,
-                'number' => $i,
-            ];
+            $this->number = $i;
+            $this->class['current'] = '';
 
-            if($i == $this->position){
-                $attr['class-li'] = $this->class['li'].' current';
-                $attr['class-a'] = $this->class['a'].' current';
-            }
+            if($i == $this->position)
+                $this->class['current'] = 'current';
 
-            $this->buttons[] = $this->createLi($attr);
+            $this->buttons[] = $this->createLi();
         }
+
+        $this->number = $this->position;
 
         if ($this->arrows)
             $this->arrowsCreator();
     }
 
-    function createLi($value)
+    function createLi()
     {
-        $html = $this->html;
-        $html = str_replace(":href", $value['href'], $html);
-        $html = str_replace(":number", $value['number'], $html);
-        $html = str_replace(":class-a", isset($value['class-a']) ? $value['class-a'] : $this->class['a'], $html);
-        $html = str_replace(":class-li", isset($value['class-li']) ? $value['class-li'] : $this->class['li'], $html);
+        $html = $this->replaces($this->html);
         return $html;
     }
 
@@ -101,37 +95,25 @@ class Paginator
 
     function arrowsCreator()
     {
-        if (is_array($this->arrows))
-            $arrowsContent = $this->arrows;
-        else
-            $arrowsContent = $this->arrowsContent[$this->arrows];
-
-        $first = 0;
-        $last = 1;
-
-        switch ($this->arrows) {
-            case 'firstAndLast':
-                $first = 'first';
-                $last = 'last';
-                break;
-
-            case 'previewAndNext':
-                $first = 'preview';
-                $last = 'next';
-                break;
-        }
-
-
         if ($this->position > 1)
-            array_unshift($this->buttons, $this->createLi([
-                'number' => str_replace(":number", '1', $arrowsContent[$first]),
-                'href' => $this->href . '1']));
-
+            array_unshift($this->buttons,$this->replaces($this->arrows[0]));
         if ($this->position < $this->quantPages)
-            array_push($this->buttons, $this->createLi([
-                'number' => str_replace(":number", $this->quantPages, $arrowsContent[$last]),
-                'href' => $this->href . $this->quantPages]));
+            array_push($this->buttons,$this->replaces($this->arrows[1]));
+    }
 
+    function replaces($item){
+
+        $item = str_replace(':position',$this->position,$item);
+        $item = str_replace(':next',$this->next,$item);
+        $item = str_replace(':last',$this->last,$item);
+        $item = str_replace(':class-a',$this->class['a'],$item);
+        $item = str_replace(':class-li',$this->class['li'],$item);
+        $item = str_replace(':class-current',$this->class['current'],$item);
+        $item = str_replace(':href',$this->href,$item);
+        $item = str_replace(':content',$this->content,$item);
+        $item = str_replace(':number',$this->number,$item);
+
+        return $item;
     }
 
 }
