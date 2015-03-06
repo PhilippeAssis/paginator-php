@@ -46,7 +46,7 @@ class Paginator
         $this->end = $this->quantPages = ceil($this->total / $this->max);
         $this->first = 1;
         $this->last = $this->position - 1;
-        $this->next = 20;
+        $this->next = $this->position + 1;
         $this->number = $this->position;
 
     }
@@ -54,6 +54,8 @@ class Paginator
     function execute()
     {
         for ($i = $this->position; $i <= ($this->position + $this->max); $i++) {
+            if($i > $this->quantPages)
+                break;
             $this->number = $i;
             $this->class['current'] = '';
 
